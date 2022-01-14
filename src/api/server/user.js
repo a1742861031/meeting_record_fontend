@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import { tokenName } from '@/config/setting.config'
+import qs from 'qs';
 
 export function login(data) {
   return request({
@@ -31,8 +31,31 @@ export function getList(current, limit, query) {
 
 export function deleteById(data) {
   return request({
-    url: `/user/${id}`,
+    url: `/user/`,
     method: 'delete',
-    data,
+    params: {
+      ids: data,
+    },
+    paramsSerializer: params => {
+      return qs.stringify(params, {
+        indices: false
+      })
+    }
   })
 }
+
+export function editUser(user) {
+  return request({
+    url: `/user/`,
+    method: 'put',
+    data: user
+  })
+}
+export function editPassword(form) {
+  return request({
+    url: `/user/password`,
+    method: 'put',
+    data: form
+  })
+}
+

@@ -89,7 +89,7 @@
       }
       const validatePassword = (rule, value, callback) => {
         if (!isPassword(value)) {
-          callback(new Error('密码不能少于6位'))
+          callback(new Error('密码不能少于3位'))
         } else {
           callback()
         }
@@ -138,7 +138,7 @@
     },
     mounted() {
       this.form.username = '阎波'
-      this.form.password = '123456'
+      this.form.password = '123'
     },
     methods: {
       handlePassword() {

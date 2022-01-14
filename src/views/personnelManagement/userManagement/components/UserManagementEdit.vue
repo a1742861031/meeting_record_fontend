@@ -1,29 +1,18 @@
 <template>
-  <el-dialog
-    :title="title"
-    :visible.sync="dialogFormVisible"
-    width="500px"
-    @close="close"
-  >
+  <el-dialog :title="title" :visible.sync="dialogFormVisible" width="500px" @close="close" @open="getTypeList">
     <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-      <el-form-item label="用户名" prop="username">
+      <el-form-item label="姓名" prop="username">
         <el-input v-model.trim="form.username" autocomplete="off"></el-input>
       </el-form-item>
-      <el-form-item label="密码" prop="password">
-        <el-input
-          v-model.trim="form.password"
-          type="password"
-          autocomplete="off"
-        ></el-input>
+      <el-form-item label="类型" prop="userType">
+        <el-select v-model="form.userType" placeholder="请选择">
+          <el-option v-for="type in types" :key="type.typeId" :label="type.typeName" :value="type.typeId">
+          </el-option>
+        </el-select>
       </el-form-item>
-      <el-form-item label="邮箱" prop="email">
-        <el-input v-model.trim="form.email" autocomplete="off"></el-input>
-      </el-form-item>
-      <el-form-item label="权限" prop="permissions">
-        <el-checkbox-group v-model="form.permissions">
-          <el-checkbox label="admin"></el-checkbox>
-          <el-checkbox label="editor"></el-checkbox>
-        </el-checkbox-group>
+      <el-form-item label="权限" prop="isAdmin">
+        <el-switch v-model="form.isAdmin" active-text="管理员" inactive-text="普通用户" :active-value="1" :inactive-value="0">
+        </el-switch>
       </el-form-item>
     </el-form>
     <div slot="footer" class="dialog-footer">
@@ -34,62 +23,70 @@
 </template>
 
 <script>
-  import { doEdit } from '@/api/userManagement'
+import { editUser } from '@/api/server/user'
+import { getTypes } from '@/api/server/type';
+export default {
+  name: 'UserManagementEdit',
+  data () {
+    return {
+      form: {
+        username: '',
+        userType:0,
+        isAdmin:0
+      },
+      types: [
+      ],
+      rules: {
+        username: [
+          { required: true, trigger: 'blur', message: '请输入用户名' },
+        ],
 
-  export default {
-    name: 'UserManagementEdit',
-    data() {
-      return {
-        form: {
-          username: '',
-          password: '',
-          email: '',
-          permissions: [],
-        },
-        rules: {
-          username: [
-            { required: true, trigger: 'blur', message: '请输入用户名' },
-          ],
-          password: [
-            { required: true, trigger: 'blur', message: '请输入密码' },
-          ],
-          email: [{ required: true, trigger: 'blur', message: '请输入邮箱' }],
-          permissions: [
-            { required: true, trigger: 'blur', message: '请选择权限' },
-          ],
-        },
-        title: '',
-        dialogFormVisible: false,
+        userType: [{ required: true, trigger: 'blur', message: '请选择类型' }],
+        isAdmin: [
+          { required: true, trigger: 'blur', message: '请选择权限' },
+        ],
+      },
+      title: '',
+      dialogFormVisible: false,
+    }
+  },
+  created () {
+
+  },
+  methods: {
+    showEdit (row) {
+      if (!row) {
+        this.title = '添加'
+      } else {
+        this.title = '编辑'
+        this.form = Object.assign({}, row)
       }
+      this.dialogFormVisible = true
     },
-    created() {},
-    methods: {
-      showEdit(row) {
-        if (!row) {
-          this.title = '添加'
+    close () {
+      this.$refs['form'].resetFields()
+      this.form = this.$options.data().form
+      this.dialogFormVisible = false
+    },
+    save () {
+      this.$refs['form'].validate(async (valid) => {
+        if (valid) {
+          console.log(this.form.isAdmin);
+          this.form.authorities = null;
+          await editUser(this.form)
+          this.$baseMessage("修改成功",'success')
+          this.$emit('fetch-data')
+          this.close()
         } else {
-          this.title = '编辑'
-          this.form = Object.assign({}, row)
+          return false
         }
-        this.dialogFormVisible = true
-      },
-      close() {
-        this.$refs['form'].resetFields()
-        this.form = this.$options.data().form
-        this.dialogFormVisible = false
-      },
-      save() {
-        this.$refs['form'].validate(async (valid) => {
-          if (valid) {
-            const { msg } = await doEdit(this.form)
-            this.$baseMessage(msg, 'success')
-            this.$emit('fetch-data')
-            this.close()
-          } else {
-            return false
-          }
-        })
-      },
+      })
     },
-  }
+    async getTypeList () {
+      const { data } = await getTypes();
+      this.types = data
+
+    }
+  },
+}
 </script>
