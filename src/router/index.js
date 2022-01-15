@@ -6,7 +6,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Layout from '@/layouts'
-import EmptyLayout from '@/layouts/EmptyLayout'
 import { publicPath, routerMode } from '@/config'
 
 Vue.use(VueRouter)
@@ -66,6 +65,24 @@ export const asyncRoutes = [
         meta: {
           title: '用户管理',
           icon: 'users-cog',
+          affix: true,
+        },
+      },
+    ],
+  },
+  {
+    path: '/',
+    component: Layout,
+    redirect: '/edit',
+    children: [
+      {
+        path: 'edit',
+        name: 'edit',
+        component: () =>
+          import('@/views/editor/index'),
+        meta: {
+          title: '会议纪要',
+          icon: 'edit',
           affix: true,
         },
       },

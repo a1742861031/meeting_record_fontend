@@ -50,6 +50,7 @@
     "maptalks": "^0.49.5",
     "mapv": "^2.0.62",
     "mockjs": "^1.1.0",
+    "moment": "^2.29.1",
     "nprogress": "^0.2.0",
     "qs": "^6.10.2",
     "screenfull": "^5.2.0",

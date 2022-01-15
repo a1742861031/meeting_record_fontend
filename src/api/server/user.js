@@ -58,4 +58,18 @@ export function editPassword(form) {
     data: form
   })
 }
+export function register(user) {
+  return request({
+    url: '/user/register',
+    method: 'post',
+    data:user
+  })
+}
+
+export function getAllUser() {
+  return request({
+    url: '/user/allUser',
+    method: 'get',
+  })
+}
 

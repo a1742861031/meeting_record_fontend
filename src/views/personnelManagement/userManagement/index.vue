@@ -28,16 +28,16 @@
         </template>
       </el-table-column>
       <el-table-column show-overflow-tooltip prop="username" label="姓名" width="150px"></el-table-column>
-      <el-table-column prop="userEmail" label="邮箱" width="200px"></el-table-column>
+      <el-table-column prop="userEmail" label="邮箱" width="160px"></el-table-column>
 
-      <el-table-column show-overflow-tooltip label="是否是管理员" width="150">
+      <el-table-column show-overflow-tooltip label="是否是管理员" width="120px">
         <template #default="{ row }">
           <el-tag v-if="row.isAdmin == 1">是</el-tag>
           <el-tag v-else type="warning">否</el-tag>
         </template>
       </el-table-column>
-      <el-table-column show-overflow-tooltip label="类型" prop="typeName" width="150px"></el-table-column>
-      <el-table-column show-overflow-tooltip prop="userMobile" label="电话" width="200px"></el-table-column>
+      <el-table-column show-overflow-tooltip label="类型" prop="typeName" width="100px"></el-table-column>
+      <el-table-column show-overflow-tooltip prop="userMobile" label="电话" width="150px"></el-table-column>
       <el-table-column show-overflow-tooltip label="操作">
         <template #default="{ row }">
           <el-button type="text" @click="handleEdit(row)">编辑</el-button>
@@ -55,10 +55,8 @@
         <el-form-item label="密码" prop="password1">
           <el-input v-model.trim="passwords.password1" autocomplete="off" type="password"></el-input>
         </el-form-item>
-        </el-form-item>
         <el-form-item label="确认密码" prop="password2">
           <el-input v-model.trim="passwords.password2" autocomplete="off" type="password"></el-input>
-        </el-form-item>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
