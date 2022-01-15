@@ -30,9 +30,10 @@ export function logout() {
   })
 }
 
-export function register() {
+export function register(userForm) {
   return request({
-    url: '/register',
+    url: '/user/register',
     method: 'post',
+    data:userForm
   })
 }

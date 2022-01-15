@@ -31,9 +31,17 @@
               <vab-icon slot="prefix" :icon="['fas', 'user-alt']"></vab-icon>
             </el-input>
           </el-form-item>
-          <el-form-item prop="phone">
+          <el-form-item prop="userType">
+            <el-select v-model="form.userType" placeholder="请选择用户类型" class="userType">
+              <el-option v-for="type in typeList" :key="type.typeId" :label="type.typeName" :value="type.typeId">
+              </el-option>
+              <vab-icon slot="prefix" :icon="['fas', 'layer-group']"></vab-icon>
+            </el-select>
+
+          </el-form-item>
+          <el-form-item prop="userMobile">
             <el-input
-              v-model.trim="form.phone"
+              v-model.trim="form.userMobile"
               type="text"
               placeholder="请输入手机号"
               maxlength="11"
@@ -43,26 +51,6 @@
               <vab-icon slot="prefix" :icon="['fas', 'mobile-alt']"></vab-icon>
             </el-input>
           </el-form-item>
-          <!--          <el-form-item prop="phoneCode" style="position: relative">-->
-          <!--            <el-input-->
-          <!--              v-model.trim="form.phoneCode"-->
-          <!--              type="text"-->
-          <!--              placeholder="手机验证码"-->
-          <!--            >-->
-          <!--              <vab-icon-->
-          <!--                slot="prefix"-->
-          <!--                :icon="['fas', 'envelope-open']"-->
-          <!--              ></vab-icon>-->
-          <!--            </el-input>-->
-          <!--            <el-button-->
-          <!--              type="primary"-->
-          <!--              class="show-pwd phone-code"-->
-          <!--              :disabled="isGetphone"-->
-          <!--              @click="getPhoneCode"-->
-          <!--            >-->
-          <!--              {{ phoneCode }}-->
-          <!--            </el-button>-->
-          <!--          </el-form-item>-->
           <el-form-item prop="password">
             <el-input
               v-model.trim="form.password"
@@ -72,16 +60,17 @@
             >
               <vab-icon slot="prefix" :icon="['fas', 'unlock']"></vab-icon>
             </el-input>
-            <el-form-item>
+            <el-form-item prop="password2">
               <el-input
-                v-model.trim="form.password"
+                v-model.trim="form.password2"
                 type="password"
                 placeholder="请重复密码"
                 autocomplete="new-password"
               >
-                <vab-icon slot="prefix" :icon="['fas', 'unlock']"></vab-icon>
+                <vab-icon slot="prefix" :icon="['fas', 'user-lock']"></vab-icon>
               </el-input>
             </el-form-item>
+
           </el-form-item>
           <el-form-item>
             <el-button
@@ -101,288 +90,327 @@
   </div>
 </template>
 <script>
-  import { isPassword, isPhone } from '@/utils/validate'
-  import { register } from '@/api/user'
+import {isPassword, isPhone} from '@/utils/validate'
+import {register} from '@/api/user'
+import {getTypes} from '@/api/server/type';
+import Vue from "_vue@2.6.14@vue";
+import {title} from "@/config/setting.config";
 
-  export default {
-    username: 'Register',
-    directives: {
-      focus: {
-        inserted(el) {
-          el.querySelector('input').focus()
-        },
+export default {
+  username: 'Register',
+  directives: {
+    focus: {
+      inserted(el) {
+        el.querySelector('input').focus()
       },
     },
-    data() {
-      const validateusername = (rule, value, callback) => {
-        if ('' == value) {
-          callback(new Error('用户名不能为空'))
-        } else {
-          callback()
-        }
+  },
+  data() {
+    const validateusername = (rule, value, callback) => {
+      if ('' === value) {
+        callback(new Error('姓名不能为空'))
+      } else {
+        callback()
       }
-      const validatePassword = (rule, value, callback) => {
-        if (!isPassword(value)) {
-          callback(new Error('密码不能少于6位'))
-        } else {
-          callback()
-        }
+    }
+    // const validatePassword = (rule, value, callback) => {
+    //   if (!isPassword(value)) {
+    //     callback(new Error('密码不能少于3位'))
+    //   } else {
+    //     callback()
+    //   }
+    // }
+    const validatePhone = (rule, value, callback) => {
+      if (!isPhone(value)) {
+        callback(new Error('请输入正确的手机号'))
+      } else {
+        callback()
       }
-      const validatePhone = (rule, value, callback) => {
-        if (!isPhone(value)) {
-          callback(new Error('请输入正确的手机号'))
-        } else {
-          callback()
+    }
+    var validatePassword = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入密码'));
+      } else if (!isPassword(value)) {
+        callback(new Error('密码不能少于3位'))
+      } else {
+        if (this.form.password !== '') {
+          this.$refs.registerForm.validateField('password2');
         }
+        callback();
       }
-      return {
-        isGetphone: false,
-        getPhoneIntval: null,
-        phoneCode: '获取验证码',
-        showRegister: false,
-        nodeEnv: process.env.NODE_ENV,
-        title: this.$baseTitle,
-        form: {},
-        registerRules: {
-          username: [
-            { required: true, trigger: 'blur', message: '请输入用户名' },
-            { max: 20, trigger: 'blur', message: '最多不能超过20个字' },
-            { validator: validateusername, trigger: 'blur' },
-          ],
-          phone: [
-            { required: true, trigger: 'blur', message: '请输入手机号码' },
-            { validator: validatePhone, trigger: 'blur' },
-          ],
-          password: [
-            { required: true, trigger: 'blur', message: '请输入密码' },
-            { validator: validatePassword, trigger: 'blur' },
-          ],
-          phoneCode: [
-            { required: true, trigger: 'blur', message: '请输入手机验证码' },
-          ],
-        },
-        loading: false,
-        passwordType: 'password',
+    };
+    var validatePass2 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请再次输入密码'));
+      } else if (value !== this.form.password) {
+        callback(new Error('两次输入密码不一致!'));
+      } else {
+        callback();
       }
-    },
-    created() {
-      document.body.style.overflow = 'hidden'
-    },
-    beforeDestroy() {
-      document.body.style.overflow = 'auto'
-      this.getPhoneIntval = null
-      clearInterval(this.getPhoneIntval)
-    },
-    methods: {
-      getPhoneCode() {
-        if (!isPhone(this.form.phone)) {
-          //this.$baseMessage('请输入手机号', 'error')
-          this.$refs['registerForm'].validateField('phone')
-          return
-        }
-        this.isGetphone = true
-        let n = 60
-        this.getPhoneIntval = setInterval(() => {
-          if (n > 0) {
-            n--
-            this.phoneCode = '重新获取(' + n + 's)'
-          } else {
-            this.getPhoneIntval = null
-            clearInterval(this.getPhoneIntval)
-            this.phoneCode = '获取验证码'
-            this.isGetphone = false
-          }
-        }, 1000)
+    };
+    return {
+      isGetphone: false,
+      getPhoneIntval: null,
+      showRegister: false,
+      nodeEnv: process.env.NODE_ENV,
+      title: this.$baseTitle,
+      form: {
+        username: '阎波',
+        password: '123456',
+        password2: '123456',
+        userMobile: '18323667740',
+        userType:2,
       },
-      handleReister() {
-        this.$refs['registerForm'].validate(async (valid) => {
-          if (valid) {
-            const param = {
-              username: this.form.username,
-              phone: this.form.phone,
-              password: this.form.password,
-              phoneCode: this.form.phoneCode,
-            }
-            const { msg } = await register(param)
-            this.$baseMessage(msg, 'success')
-          }
-        })
+      userForm: {
+        userName: '',
+        userMobile: '',
+        userPassword: '',
+        userType: 0,
       },
+      typeList: [],
+      registerRules: {
+        username: [
+          {required: true, trigger: 'blur', message: '请输入姓名'},
+          {max: 20, trigger: 'blur', message: '最多不能超过20个字'},
+          {validator: validateusername, trigger: 'blur'},
+        ],
+        userMobile: [
+          {required: true, trigger: 'blur', message: '请输入手机号码'},
+          {validator: validatePhone, trigger: 'blur'},
+        ],
+        password: [
+          {validator: validatePassword, trigger: 'blur'},
+        ],
+        password2: [
+          {validator: validatePass2, trigger: 'blur'},
+        ]
+
+      },
+      loading: false,
+      passwordType: 'password',
+    }
+  },
+  async created() {
+    document.body.style.overflow = 'hidden';
+    const {data} = await getTypes();
+    this.typeList = data;
+  },
+  beforeDestroy() {
+    document.body.style.overflow = 'auto'
+    this.getPhoneIntval = null
+    clearInterval(this.getPhoneIntval)
+  },
+  methods: {
+    getPhoneCode() {
+      if (!isPhone(this.form.phone)) {
+        //this.$baseMessage('请输入手机号', 'error')
+        this.$refs['registerForm'].validateField('phone')
+        return
+      }
+      this.isGetphone = true
+      let n = 60
+      this.getPhoneIntval = setInterval(() => {
+        if (n > 0) {
+          n--
+          this.phoneCode = '重新获取(' + n + 's)'
+        } else {
+          this.getPhoneIntval = null
+          clearInterval(this.getPhoneIntval)
+          this.phoneCode = '获取验证码'
+          this.isGetphone = false
+        }
+      }, 1000)
     },
-  }
+    handleReister() {
+      this.$refs['registerForm'].validate(async (valid) => {
+        if (valid) {
+          this.userForm.userMobile = this.form.userMobile;
+          this.userForm.userName = this.form.username;
+          this.userForm.userType = this.form.userType;
+          this.userForm.userPassword = this.form.password;
+          await register(this.userForm)
+          this.$baseNotify(`注册成功`, `恭喜你`);
+          await this.$router.push("/login")
+        }
+      })
+    },
+  },
+}
 </script>
 <style lang="scss" scoped>
-  .register-container {
-    height: 100vh;
-    background: url('~@/assets/login_images/background.jpg') center center fixed
-      no-repeat;
-    background-size: cover;
+.register-container {
+  height: 100vh;
+  background: url('~@/assets/login_images/background.jpg') center center fixed no-repeat;
+  background-size: cover;
 
-    .title {
-      font-size: 54px;
-      font-weight: 500;
-      color: rgba(14, 18, 26, 1);
+  .title {
+    font-size: 54px;
+    font-weight: 500;
+    color: rgba(14, 18, 26, 1);
+  }
+
+  .title-tips {
+    margin-top: 29px;
+    font-size: 26px;
+    font-weight: 400;
+    color: rgba(14, 18, 26, 1);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .register-btn {
+    display: inherit;
+    width: 220px;
+    height: 60px;
+    margin-top: 5px;
+    border: 0;
+
+    &:hover {
+      opacity: 0.9;
     }
+  }
 
-    .title-tips {
-      margin-top: 29px;
-      font-size: 26px;
-      font-weight: 400;
-      color: rgba(14, 18, 26, 1);
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+  .register-form {
+    position: relative;
+    max-width: 100%;
+    margin: calc((100vh - 499px) / 2) 10% 10%;
+    overflow: hidden;
 
-    .register-btn {
-      display: inherit;
-      width: 220px;
-      height: 60px;
-      margin-top: 5px;
-      border: 0;
-
-      &:hover {
-        opacity: 0.9;
-      }
-    }
-
-    .register-form {
-      position: relative;
-      max-width: 100%;
-      margin: calc((100vh - 499px) / 2) 10% 10%;
-      overflow: hidden;
+    .forget-password {
+      width: 100%;
+      margin-top: 40px;
+      text-align: left;
 
       .forget-password {
-        width: 100%;
-        margin-top: 40px;
-        text-align: left;
-
-        .forget-password {
-          width: 129px;
-          height: 19px;
-          font-size: 20px;
-          font-weight: 400;
-          color: rgba(92, 102, 240, 1);
-        }
-      }
-
-      .per-code {
-        width: 100px;
-        height: 36px;
+        width: 129px;
+        height: 19px;
         font-size: 20px;
-        line-height: 36px;
-        color: #fff;
-        text-align: center;
-        cursor: pointer;
-        background: #bbc1ce;
-      }
-
-      .phone-code {
-        width: 120px;
-        height: 36px;
-        font-size: 14px;
-        color: #fff;
-        border-radius: 3px;
+        font-weight: 400;
+        color: rgba(92, 102, 240, 1);
       }
     }
 
-    .tips {
-      margin-bottom: 10px;
-      font-size: $base-font-size-default;
-      color: $base-color-white;
-
-      span {
-        &:first-of-type {
-          margin-right: 16px;
-        }
-      }
-    }
-
-    .title-container {
-      position: relative;
-
-      .title {
-        margin: 0 auto 40px auto;
-        font-size: 34px;
-        font-weight: bold;
-        color: $base-color-blue;
-        text-align: center;
-      }
-    }
-
-    .svg-container {
-      position: absolute;
-      top: 14px;
-      left: 15px;
-      z-index: $base-z-index;
-      font-size: 16px;
-      color: #d7dee3;
+    .per-code {
+      width: 100px;
+      height: 36px;
+      font-size: 20px;
+      line-height: 36px;
+      color: #fff;
+      text-align: center;
       cursor: pointer;
-      user-select: none;
+      background: #bbc1ce;
     }
 
-    .show-pwd {
-      position: absolute;
-      top: 14px;
-      right: 25px;
-      font-size: 16px;
-      color: $base-font-color;
-      cursor: pointer;
-      user-select: none;
+    .phone-code {
+      width: 120px;
+      height: 36px;
+      font-size: 14px;
+      color: #fff;
+      border-radius: 3px;
     }
+  }
 
-    ::v-deep {
-      .el-form-item {
-        padding-right: 0;
-        margin: 20px 0;
-        color: #454545;
-        background: transparent;
-        border: 1px solid transparent;
-        border-radius: 2px;
+  .tips {
+    margin-bottom: 10px;
+    font-size: $base-font-size-default;
+    color: $base-color-white;
 
-        &__content {
-          min-height: $base-input-height;
-          line-height: $base-input-height;
-        }
-
-        &__error {
-          position: absolute;
-          top: 100%;
-          left: 18px;
-          font-size: $base-font-size-small;
-          line-height: 18px;
-          color: $base-color-red;
-        }
-      }
-
-      .el-input {
-        box-sizing: border-box;
-
-        .el-input__count {
-          .el-input__count-inner {
-            background: transparent;
-          }
-        }
-
-        .el-input__prefix {
-          left: 15px;
-          line-height: 56px;
-
-          .svg-inline--fa {
-            width: 20px;
-          }
-        }
-
-        input {
-          height: 58px;
-          padding-left: 45px;
-          font-size: $base-font-size-default;
-          line-height: 58px;
-          color: $base-font-color;
-          background: #f6f4fc;
-          border: 0;
-          caret-color: $base-font-color;
-        }
+    span {
+      &:first-of-type {
+        margin-right: 16px;
       }
     }
   }
+
+  .title-container {
+    position: relative;
+
+    .title {
+      margin: 0 auto 40px auto;
+      font-size: 34px;
+      font-weight: bold;
+      color: $base-color-blue;
+      text-align: center;
+    }
+  }
+
+  .svg-container {
+    position: absolute;
+    top: 14px;
+    left: 15px;
+    z-index: $base-z-index;
+    font-size: 16px;
+    color: #d7dee3;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .show-pwd {
+    position: absolute;
+    top: 14px;
+    right: 25px;
+    font-size: 16px;
+    color: $base-font-color;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  ::v-deep {
+    .el-form-item {
+      padding-right: 0;
+      margin: 20px 0;
+      color: #454545;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 2px;
+
+      &__content {
+        min-height: $base-input-height;
+        line-height: $base-input-height;
+      }
+
+      &__error {
+        position: absolute;
+        top: 100%;
+        left: 18px;
+        font-size: $base-font-size-small;
+        line-height: 18px;
+        color: $base-color-red;
+      }
+    }
+
+    .el-input {
+      box-sizing: border-box;
+
+      .el-input__count {
+        .el-input__count-inner {
+          background: transparent;
+        }
+      }
+
+      .el-input__prefix {
+        left: 15px;
+        line-height: 56px;
+
+        .svg-inline--fa {
+          width: 20px;
+        }
+      }
+
+      input {
+        height: 58px;
+        padding-left: 45px;
+        font-size: $base-font-size-default;
+        line-height: 58px;
+        color: $base-font-color;
+        background: #f6f4fc;
+        border: 0;
+        caret-color: $base-font-color;
+      }
+      .el-select{
+        width: 100%;
+      }
+    }
+  }
+}
 </style>
