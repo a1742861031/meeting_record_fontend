@@ -4,27 +4,31 @@
  */
 
 import Vue from 'vue'
-import { login, getUserInfo } from '@/api/server/user'
+import {login, getUserInfo} from '@/api/server/user'
 import {
   getAccessToken,
   removeAccessToken,
   setAccessToken,
 } from '@/utils/accessToken'
-import { menus } from '@/api/router'
-import { resetRouter } from '@/router'
-import { title, tokenName } from '@/config'
+import {menus} from '@/api/router'
+import {resetRouter} from '@/router'
+import {title, tokenName} from '@/config'
 
 const state = () => ({
   accessToken: getAccessToken(),
   username: '',
   avatar: '',
   permissions: [],
+  email: '',
+  mobile: ''
 })
 const getters = {
   accessToken: (state) => state.accessToken,
   username: (state) => state.username,
   avatar: (state) => state.avatar,
   permissions: (state) => state.permissions,
+  email: (state) => state.email,
+  mobile: (state) => state.mobile
 }
 const mutations = {
   setAccessToken(state, accessToken) {
@@ -40,13 +44,22 @@ const mutations = {
   setPermissions(state, permissions) {
     state.permissions = permissions
   },
+  setEmail(state, email) {
+    state.email = email
+  },
+  setMobile(state, mobile) {
+    state.mobile = mobile
+  },
 }
 const actions = {
-  setPermissions({ commit }, permissions) {
+  setPermissions({commit}, permissions) {
     commit('setPermissions', permissions)
   },
-  async login({ commit }, userInfo) {
-    const { data: accessToken } = await login(userInfo)
+  setAvatar({commit}, avatar) {
+    commit("setAvatar", avatar)
+  },
+  async login({commit}, userInfo) {
+    const {data: accessToken} = await login(userInfo)
     if (accessToken) {
       commit('setAccessToken', 'Bearer ' + accessToken)
       const hour = new Date().getHours()
@@ -54,12 +67,12 @@ const actions = {
         hour < 8
           ? '早上好'
           : hour <= 11
-          ? '上午好'
-          : hour <= 13
-          ? '中午好'
-          : hour < 18
-          ? '下午好'
-          : '晚上好'
+            ? '上午好'
+            : hour <= 13
+              ? '中午好'
+              : hour < 18
+                ? '下午好'
+                : '晚上好'
       Vue.prototype.$baseNotify(`欢迎登录${title}`, `${thisTime}！`)
     } else {
       Vue.prototype.$baseMessage(
@@ -68,33 +81,35 @@ const actions = {
       )
     }
   },
-  async getUserInfo({ commit, state }) {
-    const { data } = await getUserInfo(state.accessToken)
+  async getUserInfo({commit, state}) {
+    const {data} = await getUserInfo(state.accessToken)
     if (!data) {
       Vue.prototype.$baseMessage('验证失败，请重新登录...', 'error')
       return false
     }
     //这里应该也要加入权限
-    let { username, userAvatar } = data
+    let {username, userAvatar, userEmail, userMobile} = data
     if (username) {
       commit('setPermissions', menus)
       commit('setUsername', username)
       commit('setAvatar', userAvatar)
+      commit('setEmail', userEmail)
+      commit('setMobile', userMobile)
       return menus
     } else {
       Vue.prototype.$baseMessage('用户信息接口异常', 'error')
       return false
     }
   },
-  async logout({ dispatch }) {
+  async logout({dispatch}) {
     // await logout(state.accessToken)
     await dispatch('resetAccessToken')
     await resetRouter()
   },
-  resetAccessToken({ commit }) {
+  resetAccessToken({commit}) {
     commit('setPermissions', [])
     commit('setAccessToken', '')
     removeAccessToken()
   },
 }
-export default { state, getters, mutations, actions }
+export default {state, getters, mutations, actions}

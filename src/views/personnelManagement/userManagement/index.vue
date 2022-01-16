@@ -1,4 +1,4 @@
-<template>
+<template xmlns="http://www.w3.org/1999/html">
   <div class="userManagement-container">
     <vab-query-form>
       <vab-query-form-left-panel :span="12">
