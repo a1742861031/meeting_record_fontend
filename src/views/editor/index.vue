@@ -89,7 +89,7 @@
         </el-table-column>
       </el-table>
 
-      <el-form-item label="会议内容" prop="content" class="vab-quill-content">
+      <el-form-item label="会议内容" prop="content" class="vab-quill-content" >
         <vab-quill
           v-model="form.content"
           :min-height="400"
@@ -97,8 +97,20 @@
         ></vab-quill>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSee">预览效果</el-button>
-        <el-button type="primary" @click="handleSave">保存</el-button>
+        <el-upload
+          class="upload"
+          ref="upload"
+          action=""
+          :on-preview="handlePreview"
+          :on-remove="handleRemove"
+          :file-list="fileList"
+          :http-request='uploadFileMethod'>
+          <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+        </el-upload>
+      </el-form-item>
+      <el-form-item style="float: right;margin-right: 50px">
+        <el-button type="warning" @click="handleSee">预览效果</el-button>
+        <el-button type="success" @click="handleSave">保存</el-button>
       </el-form-item>
     </el-form>
     <el-dialog title="预览效果" :visible.sync="dialogTableVisible">
@@ -114,6 +126,8 @@
 import vabQuill from '@/plugins/vabQuill'
 import {getAllUser} from '@/api/server/user'
 import {addRecord} from '@/api/server/record'
+import {uploadFile} from '@/api/server/file'
+
 export default {
   name: 'Editor',
   components: {vabQuill},
@@ -121,6 +135,7 @@ export default {
 
   data() {
     return {
+      fileList: [],
       options: {
         theme: 'snow',
         bounds: document.body,
@@ -156,6 +171,7 @@ export default {
         time: '', //详细时间
         attendances: [], //出席人员
         nonAttendances: [], //请假人员
+        files:[]
       },
       nonAttendancePeople: {},
       userList: [],
@@ -203,6 +219,13 @@ export default {
             trigger: 'blur',
           },
         ],
+        content:[
+          {
+            required: true,
+            message: '请输入文章内容',
+            trigger: 'blur',
+
+        }]
       },
     }
   },
@@ -212,6 +235,27 @@ export default {
     this.userList2 = data;
   },
   methods: {
+    async uploadFileMethod(param) {
+      let fileObject = param.file;
+      let formData = new FormData();
+      formData.append("file", fileObject);
+      const {data} = await uploadFile(formData);
+      this.fileList.push({name: param.file.name, url: data})
+      console.log(this.fileList)
+
+    },
+
+    handleRemove(file, fileList) {
+      for (let i = 0; i < this.fileList.length; i++) {
+        if (this.fileList[i].url === file.url) {
+          this.fileList.splice(i, 1);
+          return;
+        }
+      }
+    },
+    handlePreview(file) {
+      window.open("https://" + file.url, '_blank').location;
+    },
     addNotAttend() {
       if (!this.nonAttendancePeople.userName) {
         this.$baseMessage('请选择缺席人员', 'warning')
@@ -238,8 +282,8 @@ export default {
         this.nonAttendancePeople = {};
       }
     },
-    deleteRow(index, item){
-      this.form.nonAttendance.splice(index,1)
+    deleteRow(index, item) {
+      this.form.nonAttendance.splice(index, 1)
     },
     handleSee() {
       this.$refs['form'].validate((valid) => {
@@ -262,12 +306,13 @@ export default {
         })
         if (valid) {
           const moment = require('moment')
-
           this.form.date = moment(this.form.date).format('YYYY-MM-DD HH:mm:ss')
-          this.form.time = moment(this.form.time).format('HH:mm')
-         await addRecord(this.form);
-         this.$baseMessage("新增会议成功",'success');
+          this.form.time = moment(this.form.time).format('HH:mm');
+          this.form.files = this.fileList;
+          await addRecord(this.form);
+          this.$baseMessage("新增会议成功", 'success');
         } else {
+          this.$baseMessage("请检查输入","warning")
           return false
         }
       })

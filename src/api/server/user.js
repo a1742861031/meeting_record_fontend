@@ -8,6 +8,7 @@ export function login(data) {
     data,
   })
 }
+
 export function getUserInfo(accessToken) {
   return request({
     url: '/user/userinfo',
@@ -51,6 +52,7 @@ export function editUser(user) {
     data: user
   })
 }
+
 export function editPassword(form) {
   return request({
     url: `/user/password`,
@@ -58,11 +60,12 @@ export function editPassword(form) {
     data: form
   })
 }
+
 export function register(user) {
   return request({
     url: '/user/register',
     method: 'post',
-    data:user
+    data: user
   })
 }
 
@@ -72,4 +75,23 @@ export function getAllUser() {
     method: 'get',
   })
 }
+
+export function updateAvatar(data) {
+  return request({
+    url: 'user/update/avatar',
+    method: 'post',
+    data:data
+  })
+}
+
+export function updateProfile(data) {
+  return request({
+    url: 'user/update/profile',
+    method: 'put',
+    data:data
+  })
+}
+
+
+
 
