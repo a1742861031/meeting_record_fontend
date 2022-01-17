@@ -8,3 +8,10 @@ export function addRecord(record) {
   })
 }
 
+export function getRecordList(current,limit) {
+  return request({
+    url: `/record/list/${current}/${limit}`,
+    method: 'get'
+  })
+}
+
