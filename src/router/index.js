@@ -6,7 +6,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Layout from '@/layouts'
-import { publicPath, routerMode } from '@/config'
+import {publicPath, routerMode} from '@/config'
 
 Vue.use(VueRouter)
 export const constantRoutes = [
@@ -84,67 +84,6 @@ export const asyncRoutes = [
           title: '会议纪要',
           icon: 'edit',
           affix: true,
-        },
-      },
-    ],
-  },
-  {
-    path: '/personnelManagement',
-    component: Layout,
-    redirect: 'noRedirect',
-    name: 'PersonnelManagement',
-    meta: { title: '配置', icon: 'users-cog' },
-    children: [
-      {
-        path: 'userManagement',
-        name: 'UserManagement',
-        component: () =>
-          import('@/views/personnelManagement/userManagement/index'),
-        meta: { title: '用户管理' },
-      },
-      {
-        path: 'roleManagement',
-        name: 'RoleManagement',
-        component: () =>
-          import('@/views/personnelManagement/roleManagement/index'),
-        meta: { title: '角色管理' },
-      },
-      {
-        path: 'menuManagement',
-        name: 'MenuManagement',
-        component: () =>
-          import('@/views/personnelManagement/menuManagement/index'),
-        meta: { title: '菜单管理', badge: 'New' },
-      },
-    ],
-  },
-  {
-    path: '/mall',
-    component: Layout,
-    redirect: 'noRedirect',
-    name: 'Mall',
-    meta: {
-      title: '商城',
-      icon: 'shopping-cart',
-    },
-
-    children: [
-      {
-        path: 'pay',
-        name: 'Pay',
-        component: () => import('@/views/mall/pay/index'),
-        meta: {
-          title: '支付',
-          noKeepAlive: true,
-        },
-        children: null,
-      },
-      {
-        path: 'goodsList',
-        name: 'GoodsList',
-        component: () => import('@/views/mall/goodsList/index'),
-        meta: {
-          title: '商品列表',
         },
       },
     ],

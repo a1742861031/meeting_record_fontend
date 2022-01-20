@@ -9,7 +9,7 @@
       <vab-query-form-right-panel :span="12">
         <el-form :inline="true" :model="queryForm" @submit.native.prevent>
           <el-form-item>
-            <el-input v-model.trim="queryForm.username" placeholder="请输入用户名" clearable />
+            <el-input v-model.trim="queryForm.username" placeholder="请输入用户名" clearable/>
           </el-form-item>
           <el-form-item>
             <el-button icon="el-icon-search" type="primary" @click="queryData">
@@ -20,7 +20,8 @@
       </vab-query-form-right-panel>
     </vab-query-form>
 
-    <el-table v-loading="listLoading" :data="list" :element-loading-text="elementLoadingText" @selection-change="setSelectRows">
+    <el-table v-loading="listLoading" :data="list" :element-loading-text="elementLoadingText"
+              @selection-change="setSelectRows">
       <el-table-column show-overflow-tooltip type="selection"></el-table-column>
       <el-table-column label="头像">
         <template #default="{ row }">
@@ -28,7 +29,16 @@
         </template>
       </el-table-column>
       <el-table-column show-overflow-tooltip prop="username" label="姓名" width="150px"></el-table-column>
-      <el-table-column prop="userEmail" label="邮箱" width="160px"></el-table-column>
+      <el-table-column label="是否启用" width="160px">
+        <template #default="{ row }">
+          <el-switch
+            v-model="row.isLocked"
+            :active-value=0
+            :inactive-value=1
+            @change="changeStatus(row.userId)">
+          </el-switch>
+        </template>
+      </el-table-column>
 
       <el-table-column show-overflow-tooltip label="是否是管理员" width="120px">
         <template #default="{ row }">
@@ -46,7 +56,8 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination background :current-page="queryForm.pageNo" :page-size="queryForm.pageSize" :layout="layout" :total="total" @size-change="handleSizeChange" @current-change="handleCurrentChange"></el-pagination>
+    <el-pagination background :current-page="queryForm.pageNo" :page-size="queryForm.pageSize" :layout="layout"
+                   :total="total" @size-change="handleSizeChange" @current-change="handleCurrentChange"></el-pagination>
     <edit ref="edit" @fetch-data="fetchData"></edit>
 
     <!-- 修改密码对话框 -->
@@ -68,13 +79,13 @@
 </template>
 
 <script>
-import { getList, deleteById, getUserById, editPassword } from '@/api/server/user'
+import {getList, deleteById, getUserById, editPassword,changeStatus} from '@/api/server/user'
 import Edit from './components/UserManagementEdit'
 
 export default {
   name: 'UserManagement',
-  components: { Edit },
-  data () {
+  components: {Edit},
+  data() {
     var validatePass = (rule, value, callback) => {
       if (value === '') {
         callback(new Error('请输入密码'));
@@ -114,33 +125,37 @@ export default {
       },
       rules: {
         password1: [
-          { validator: validatePass, trigger: 'blur' }
+          {validator: validatePass, trigger: 'blur'}
         ],
         password2: [
-          { validator: validatePass2, trigger: 'blur' }
+          {validator: validatePass2, trigger: 'blur'}
         ],
 
       }
     }
   },
-  created () {
+  created() {
     this.fetchData()
   },
   methods: {
-    setSelectRows (val) {
+    async changeStatus(val) {
+      await changeStatus(val)
+      this.$baseMessage("账号状态修改成功","success")
+    },
+    setSelectRows(val) {
       this.selectRows = val
     },
-    handleEdit (row) {
+    handleEdit(row) {
       if (row.userId) {
         this.$refs['edit'].showEdit(row)
       } else {
         this.$refs['edit'].showEdit()
       }
     },
-    handleDelete (row) {
+    handleDelete(row) {
       if (row.userId) {
         this.$baseConfirm('你确定要删除当前项吗', null, async () => {
-          const { msg } = await deleteById(row.userId)
+          const {msg} = await deleteById(row.userId)
           this.$baseMessage(msg, 'success')
           this.fetchData()
         })
@@ -148,7 +163,7 @@ export default {
         if (this.selectRows.length > 0) {
           const ids = this.selectRows.map((item) => item.userId).join()
           this.$baseConfirm('你确定要删除选中项吗', null, async () => {
-            const { msg } = await deleteById(ids)
+            const {msg} = await deleteById(ids)
             this.$baseMessage(msg, 'success')
             this.fetchData()
           })
@@ -158,28 +173,28 @@ export default {
         }
       }
     },
-    handleSizeChange (val) {
+    handleSizeChange(val) {
       this.queryForm.pageSize = val
       this.fetchData()
     },
-    handleCurrentChange (val) {
+    handleCurrentChange(val) {
       this.queryForm.pageNo = val
       this.fetchData()
     },
-    handleEditPassword (id) {
+    handleEditPassword(id) {
       this.passwords.userId = id
       this.eidtdPasswordVisible = true
     },
-    queryData () {
+    queryData() {
       this.queryForm.pageNo = 1
       this.fetchData()
     },
-    summitPasswordEdit () {
+    summitPasswordEdit() {
       this.$refs["passwordform"].validate(async (valid) => {
         if (valid) {
           await editPassword(this.passwords);
-           this.$baseMessage('修改密码成功', 'success');
-           this.eidtdPasswordVisible = false;
+          this.$baseMessage('修改密码成功', 'success');
+          this.eidtdPasswordVisible = false;
           this.$refs["passwordform"].resetFields();
         } else {
           console.log('error submit!!');
@@ -187,9 +202,9 @@ export default {
         }
       });
     },
-    async fetchData () {
+    async fetchData() {
       this.listLoading = true
-      const { data } = await getList(
+      const {data} = await getList(
         this.queryForm.pageNo,
         this.queryForm.pageSize,
         this.queryForm.username

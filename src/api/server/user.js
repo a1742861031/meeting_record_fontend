@@ -92,6 +92,22 @@ export function updateProfile(data) {
   })
 }
 
+export function changeStatus(id) {
+  return request({
+    url: `user/lock/${id}`,
+    method: 'get',
+  })
+}
+
+export function editPasswordByName(data) {
+  return request({
+    url: `user/editPassByName`,
+    method: 'put',
+    data:data
+  })
+}
+
+
 
 
 

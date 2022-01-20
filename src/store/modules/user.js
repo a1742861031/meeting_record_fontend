@@ -20,7 +20,8 @@ const state = () => ({
   avatar: '',
   permissions: [],
   email: '',
-  mobile: ''
+  mobile: '',
+  isAdmin: 0
 })
 const getters = {
   accessToken: (state) => state.accessToken,
@@ -28,7 +29,8 @@ const getters = {
   avatar: (state) => state.avatar,
   permissions: (state) => state.permissions,
   email: (state) => state.email,
-  mobile: (state) => state.mobile
+  mobile: (state) => state.mobile,
+  isAdmin: (state) => state.isAdmin
 }
 const mutations = {
   setAccessToken(state, accessToken) {
@@ -50,6 +52,9 @@ const mutations = {
   setMobile(state, mobile) {
     state.mobile = mobile
   },
+  setIsAdmin(state, isAdmin) {
+    state.isAdmin = isAdmin
+  }
 }
 const actions = {
   setPermissions({commit}, permissions) {
@@ -88,13 +93,14 @@ const actions = {
       return false
     }
     //这里应该也要加入权限
-    let {username, userAvatar, userEmail, userMobile} = data
+    let {username, userAvatar, userEmail, userMobile, isAdmin} = data
     if (username) {
       commit('setPermissions', menus)
       commit('setUsername', username)
       commit('setAvatar', userAvatar)
       commit('setEmail', userEmail)
       commit('setMobile', userMobile)
+      commit('setIsAdmin', isAdmin)
       return menus
     } else {
       Vue.prototype.$baseMessage('用户信息接口异常', 'error')

@@ -137,8 +137,8 @@
       document.body.style.overflow = 'auto'
     },
     mounted() {
-      this.form.username = '阎波'
-      this.form.password = '123'
+      this.form.username = ''
+      this.form.password = ''
     },
     methods: {
       handlePassword() {

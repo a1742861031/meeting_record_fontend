@@ -4,9 +4,10 @@
       <div class="user-block">
         <img class="img-circle"
              :src=record.userAvatar>
-        <span class="username text-muted"><a @click="gotoDetail" class="title">{{ record.title }}</a></span>
+        <span class="username text-muted"><a @click="getRecordById(record.id)" class="title">{{
+            record.title
+          }}</a></span>
         <span class="description">{{ record.recorder + "记录的" + record.date + "  " + record.time + "的会议" }}</span>
-
       </div>
       <p>
         {{ record.content }}
@@ -18,17 +19,47 @@
             {{ "    " + record.readNum + " 浏览" }}
           </span>
         </li>
+        <li @click="getToEdit(record.id)" v-if="isAdmin==1||username==record.recorder">
+          <span class="link-black text-sm">
+            <vab-icon :icon="['fas', 'edit']"></vab-icon>
+            编辑
+          </span>
+        </li>
       </ul>
     </div>
     <el-pagination :page-size="page.limit" :total="total" layout="prev, pager, next,total"
                    @current-change="currentChange"></el-pagination>
+    <!--会议详情dialog-->
+    <el-dialog title="会议详情" :visible.sync="dialogTableVisible">
+      <div class="main" style="min-height: 50vh" id="detailRecord">
+        <h1 class="news-title">{{ detailRecord.title }}</h1>
+        <span class="time-title">{{ detailRecord.date }}</span>
+        <span class="time-title" v-if="detailRecord.attend">
+          出席人员：{{ detailRecord.attend }}
+        </span>
+        <span class="time-title" v-if="detailRecord.noAttend">
+          缺席人员：{{ detailRecord.noAttend }}
+        </span>
+        <div class="news-content" v-html="detailRecord.content"></div>
+        <div v-for="file in detailRecord.files" :key="file.url">
+          <a :href="file.url">{{file.filename }}</a>
+        </div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="downLoadPdf(detailRecord.title)" type="primary">下载为PDF</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import {getRecordList} from '@/api/server/record'
+import {getRecordList, getRecordById} from '@/api/server/record'
+import moment from "_moment@2.29.1@moment";
+import htmlToPdf from '@/utils/htmlToPdf';
+import {mapGetters} from "vuex";
 
 export default {
+
   data() {
     return {
       page: {
@@ -37,10 +68,19 @@ export default {
       },
       records: [],
       total: 0,
+      detailRecord: {},//会议详情
+      dialogTableVisible: false
     }
+  },
+  computed: {
+    ...mapGetters({
+      username: 'user/username',
+      isAdmin: 'user/isAdmin'
+    }),
   },
   created() {
     this.getRecords();
+    console.log("管理员:", this.isAdmin)
   },
   methods: {
     async getRecords() {
@@ -53,13 +93,37 @@ export default {
         }
         item.date = item.date.substr(0, item.date.indexOf("T"));
       })
-      console.log(this.records)
     },
     currentChange(val) {
       this.page.current = val
-
       this.getRecords()
     },
+    getToEdit(id) {
+      this.$router.push({path: '/edit', query: {id: id}})
+    },
+    async getRecordById(id) {
+      const {data} = await getRecordById(id);
+      const moment = require('moment')
+      if (data.date) {
+        this.detailRecord.date =
+          moment(data.date).format('YYYY-MM-DD') + " " + data.time
+      }
+      this.detailRecord.nonAttend = []
+      for (let i = 0; i < data.nonAttend.length; i++) {
+        let str = data.nonAttend[i].userName + "（" + data.nonAttend[i].reason + "）"
+        this.detailRecord.nonAttend.push(str)
+      }
+      this.detailRecord.noAttend = this.detailRecord.nonAttend.join(",")
+      //处理参与人员
+      this.detailRecord.attend = data.attend.join(",")
+      this.detailRecord.content = data.content
+      this.detailRecord.title = data.title
+      this.dialogTableVisible = true;
+      this.detailRecord.files = data.files
+    },
+    downLoadPdf(fileName) {
+      htmlToPdf.downloadPDF(document.querySelector('#detailRecord'), fileName);
+    }
   }
 }
 </script>
@@ -149,5 +213,16 @@ export default {
 
 .text-muted {
   color: #777;
+}
+
+.news {
+  &-title {
+    text-align: center;
+  }
+}
+
+.time-title {
+  display: block;
+  text-align: center;
 }
 </style>
