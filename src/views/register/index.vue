@@ -229,7 +229,7 @@ export default {
           this.userForm.userType = this.form.userType;
           this.userForm.userPassword = this.form.password;
           await register(this.userForm)
-          this.$baseNotify(`注册成功`, `恭喜你`);
+          this.$baseNotify(`注册成功,等待管理员审核`, `恭喜你`);
           await this.$router.push("/login")
         }
       })

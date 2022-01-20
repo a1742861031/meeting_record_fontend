@@ -49,7 +49,7 @@ function hasPermission(permissions, route) {
  * @returns {[]}
  */
 export function filterAsyncRoutes(routes, permissions) {
-  const finallyRoutes = []
+  const finallyRoutes = [];
   routes.forEach((route) => {
     const item = { ...route }
     if (hasPermission(permissions, item)) {

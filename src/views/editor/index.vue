@@ -115,6 +115,7 @@
           :options="options"
         ></vab-quill>
       </el-form-item>
+      <br/>
       <el-form-item>
         <el-upload
           class="upload"
@@ -134,7 +135,7 @@
         <el-button type="success" @click="handleSave">保存</el-button>
       </el-form-item>
     </el-form>
-    <el-dialog title="是否提交" :visible.sync="dialogTableVisible" @closed="handleClose">
+    <el-dialog :title="title" :visible.sync="dialogTableVisible" @closed="handleClose">
       <div class="main" style="min-height: 50vh">
         <h1 class="news-title">{{ preview.title }}</h1>
         <span class="time-title">{{ preview.date }}</span>
@@ -148,7 +149,7 @@
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogTableVisible = false">继 续 修 改</el-button>
-        <el-button type="primary" @click="summitToBack">
+        <el-button type="primary" @click="handleFinalSummit">
           提  交
         </el-button>
       </span>
@@ -159,7 +160,7 @@
 <script>
 import vabQuill from '@/plugins/vabQuill'
 import {getAllUser} from '@/api/server/user'
-import {addRecord} from '@/api/server/record'
+import {addRecord, getEditRecord, editRecord} from '@/api/server/record'
 import {uploadFile} from '@/api/server/file'
 import moment from '_moment@2.29.1@moment'
 
@@ -178,6 +179,8 @@ export default {
         noAttend: '',
         content: '',
       },
+      id: 0,
+      title: '预览添加',
       options: {
         theme: 'snow',
         bounds: document.body,
@@ -272,9 +275,19 @@ export default {
     }
   },
   async created() {
+    if (this.$route.query && this.$route.query.id) {
+      const {data} = await getEditRecord(this.$route.query.id);
+      //处理时间
+      let time = "2020-1-10 " + data.time + ":00"
+      this.form = data
+      this.form.time = new Date(time)
+      this.fileList = data.files
+      this.title = "预览修改"
+    }
     const {data} = await getAllUser()
     this.userList = data
     this.userList2 = data
+
   },
   methods: {
     async uploadFileMethod(param) {
@@ -294,7 +307,7 @@ export default {
       }
     },
     handlePreview(file) {
-      window.open('https://' + file.url, '_blank').location
+      window.open(file.url, '_blank').location
     },
     handleClose() {
       this.preview.noAttend = '';
@@ -334,7 +347,7 @@ export default {
       }
     },
     deleteRow(index, item) {
-      this.form.nonAttendance.splice(index, 1)
+      this.form.nonAttendances.splice(index, 1)
     },
     handleSee() {
       const moment = require('moment')
@@ -343,29 +356,18 @@ export default {
           moment(this.form.date).format('YYYY-MM-DD') + " " + moment(this.form.time).format('HH:mm')
       }
       //处理参与人员
-      if (this.form.attendances.length > 0) {
-        for (let i = 0; i < this.form.attendances.length - 1; i++) {
-          this.preview.attend =
-            this.form.attendances[i] + this.preview.attend + ","
-        }
-        this.preview.attend +=
-          this.form.attendances[this.form.attendances.length - 1]
-      }
-
-      if (this.form.nonAttendances.length > 0) {
-        for (let i = 0; i < this.form.nonAttendances.length - 1; i++) {
-          this.preview.noAttend =
-            this.form.nonAttendances[i].userName + this.preview.noAttend + ','
-        }
-        this.preview.noAttend +=
-          this.form.nonAttendances[this.form.nonAttendances.length - 1].userName
-      }
+      this.preview.attend = this.form.attendances.join(",")
       //处理未出席人员人员
+      let arr = [];
+      for (let i = 0; i < this.form.nonAttendances.length; i++) {
+        arr.push(this.form.nonAttendances[i].userName)
+      }
+      this.preview.noAttend = arr.join(",")
       this.preview.content = this.form.content
       this.preview.title = this.form.title
     },
     async summitToBack() {
-      const Loading = this.$baseColorfullLoading(1);
+      const Loading = this.$baseColorfullLoading(1,"提交中，请勿刷新");
       this.form.files = this.fileList;
       Object.assign(this.summitForm, this.form)
       const moment = require('moment')
@@ -373,12 +375,36 @@ export default {
         'YYYY-MM-DD HH:mm:ss'
       )
       this.summitForm.time = moment(this.form.time).format('HH:mm')
-      await addRecord(this.form)
+      await addRecord(this.summitForm)
       setTimeout(() => {
         Loading.close()
+        this.$baseMessage('新增会议成功', 'success');
+        this.$router.push("/")
       }, 1000)
-      this.$baseMessage('新增会议成功', 'success');
-      await this.$router.push("/")
+    },
+
+    async editToBack() {
+      const Loading = this.$baseColorfullLoading(1,"提交中，请勿刷新");
+      this.form.files = this.fileList;
+      Object.assign(this.summitForm, this.form)
+      const moment = require('moment')
+      this.summitForm.date = moment(this.form.date).format(
+        'YYYY-MM-DD HH:mm:ss'
+      )
+      this.summitForm.time = moment(this.form.time).format('HH:mm')
+      await editRecord(this.summitForm)
+      setTimeout(() => {
+        Loading.close()
+        this.$baseMessage('修改会议成功', 'success');
+        this.$router.push("/")
+      }, 1000)
+    },
+    handleFinalSummit() {
+      if (this.$route.query && this.$route.query.id) {
+        this.editToBack();
+      } else {
+        this.summitToBack();
+      }
     },
     handleSave() {
       this.$refs['form'].validate(async (valid) => {
@@ -401,6 +427,11 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+.time-title {
+  display: block;
+  text-align: center;
+}
+
 .time-title {
   display: block;
   text-align: center;

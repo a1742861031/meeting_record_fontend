@@ -54,7 +54,13 @@ module.exports = {
       warnings: true,
       errors: true,
     },
-    after: mockServer(),
+    proxy: {
+      '/': {
+        target: 'http://1.117.152.124', // 后台接口域名
+        changeOrigin: true, // 是否跨域
+      },
+    },
+    // after: mockServer(),
   },
   configureWebpack() {
     return {
