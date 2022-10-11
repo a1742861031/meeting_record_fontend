@@ -54,7 +54,6 @@
 
 <script>
 import {getRecordList, getRecordById} from '@/api/server/record'
-import moment from "_moment@2.29.1@moment";
 import htmlToPdf from '@/utils/htmlToPdf';
 import {mapGetters} from "vuex";
 

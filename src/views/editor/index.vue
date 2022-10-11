@@ -162,7 +162,6 @@ import vabQuill from '@/plugins/vabQuill'
 import {getAllUser} from '@/api/server/user'
 import {addRecord, getEditRecord, editRecord} from '@/api/server/record'
 import {uploadFile} from '@/api/server/file'
-import moment from '_moment@2.29.1@moment'
 
 export default {
   name: 'Editor',

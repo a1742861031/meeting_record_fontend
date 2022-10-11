@@ -93,8 +93,6 @@
 import {isPassword, isPhone} from '@/utils/validate'
 import {register} from '@/api/user'
 import {getTypes} from '@/api/server/type';
-import Vue from "_vue@2.6.14@vue";
-import {title} from "@/config/setting.config";
 
 export default {
   username: 'Register',
